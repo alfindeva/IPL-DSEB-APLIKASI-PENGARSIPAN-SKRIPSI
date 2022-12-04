@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 04 Des 2022 pada 03.29
+-- Waktu pembuatan: 04 Des 2022 pada 04.36
 -- Versi server: 10.4.19-MariaDB
 -- Versi PHP: 8.0.6
 
@@ -31,7 +31,7 @@ CREATE TABLE `t_data_anggota` (
   `id_anggota` int(11) NOT NULL,
   `nama` varchar(30) DEFAULT NULL,
   `email` varchar(30) DEFAULT NULL,
-  `no_hp` varchar(13) DEFAULT NULL,
+  `no_hp` varchar(12) DEFAULT NULL,
   `domisili` varchar(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -43,9 +43,9 @@ CREATE TABLE `t_data_anggota` (
 
 CREATE TABLE `t_data_buku` (
   `id_buku` int(11) NOT NULL,
-  `judul` varchar(30) DEFAULT NULL,
+  `judul` varchar(50) DEFAULT NULL,
   `pengarang` varchar(30) DEFAULT NULL,
-  `penerbit` varchar(30) DEFAULT NULL,
+  `penerbit` varchar(50) DEFAULT NULL,
   `kategori` varchar(30) DEFAULT NULL,
   `deskripsi` text DEFAULT NULL,
   `stok` int(11) DEFAULT NULL
@@ -62,8 +62,8 @@ CREATE TABLE `t_peminjaman_buku` (
   `id_anggota` int(11) DEFAULT NULL,
   `id_buku` int(11) DEFAULT NULL,
   `id_pustakawan` int(11) DEFAULT NULL,
-  `nama` varchar(30) DEFAULT NULL,
-  `judul` varchar(30) DEFAULT NULL,
+  `nama` varchar(50) DEFAULT NULL,
+  `judul` varchar(50) DEFAULT NULL,
   `jumlah` int(11) DEFAULT NULL,
   `tgl_pinjam` varchar(30) DEFAULT NULL,
   `tgl_kembali` varchar(30) DEFAULT NULL,
@@ -79,8 +79,8 @@ CREATE TABLE `t_peminjaman_buku` (
 
 CREATE TABLE `t_pustakawan` (
   `id_pustakawan` int(11) NOT NULL,
-  `nama_pustakawan` varchar(30) DEFAULT NULL,
-  `nama_pengguna` varchar(30) DEFAULT NULL,
+  `nama_pustakawan` varchar(50) DEFAULT NULL,
+  `nama_pengguna` varchar(50) DEFAULT NULL,
   `kata_sandi` varchar(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
