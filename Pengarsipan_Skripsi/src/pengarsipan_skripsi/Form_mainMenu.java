@@ -199,27 +199,27 @@ public class Form_mainMenu extends javax.swing.JFrame {
 
     private void btn_mahasiswaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_mahasiswaActionPerformed
         // TODO add your handling code here:
-       
+        new Form_dataMahasiswa().setVisible(true);
     }//GEN-LAST:event_btn_mahasiswaActionPerformed
 
     private void btn_dosenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_dosenActionPerformed
         // TODO add your handling code here:
-        
+        new Form_dataDosen().setVisible(true);
     }//GEN-LAST:event_btn_dosenActionPerformed
 
     private void btn_kategori_skripsiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_kategori_skripsiActionPerformed
         // TODO add your handling code here:
-        
+        new Form_kategoriSkripsi().setVisible(true);
     }//GEN-LAST:event_btn_kategori_skripsiActionPerformed
 
     private void btn_cari_skripsiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_cari_skripsiActionPerformed
         // TODO add your handling code here:
-        
+        new Pencarian_Skripsi().setVisible(true);
     }//GEN-LAST:event_btn_cari_skripsiActionPerformed
 
     private void btn_skripsiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_skripsiActionPerformed
         // TODO add your handling code here:
-       
+        new Form_dataSkripsi().setVisible(true);
     }//GEN-LAST:event_btn_skripsiActionPerformed
 
     /**
