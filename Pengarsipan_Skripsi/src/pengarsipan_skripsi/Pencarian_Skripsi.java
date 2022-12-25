@@ -8,6 +8,12 @@ package pengarsipan_skripsi;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import javax.swing.JOptionPane;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.proteanit.sql.DbUtils;
 
 /*
  *
@@ -26,6 +32,7 @@ public class Pencarian_Skripsi extends javax.swing.JFrame {
     public Pencarian_Skripsi() {
         initComponents();
         initUI();
+        GetData();
     }
     
     private void initUI(){
@@ -35,7 +42,61 @@ public class Pencarian_Skripsi extends javax.swing.JFrame {
         
         int dx = centerPoint.x - windowSize.width / 2;
         int dy = centerPoint.y - windowSize.height / 2;    
-        setLocation(dx, dy);  
+        setLocation(dx, dy);   
+    }
+    
+    private void TxtClear(){
+        tf_id.setText("");
+        tf_cari.setText("");
+        tf_id.setVisible(false);
+    }
+
+    private void GetData(){
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_skripsi.id, t_data_skripsi.judul, t_kategori_skripsi.kategori_studi, t_data_mahasiswa.nama, t_data_dosen.nama FROM t_data_skripsi INNER JOIN t_kategori_skripsi ON t_data_skripsi.id = t_kategori_skripsi.id INNER JOIN t_data_mahasiswa ON t_data_skripsi.id = t_data_mahasiswa.id INNER JOIN t_data_dosen ON t_data_skripsi.id = t_data_dosen.id");
+            t_data_pencarian_skripsi.setModel(DbUtils.resultSetToTableModel(sql));
+            t_data_pencarian_skripsi.getColumnModel().getColumn(0);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(1);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(2);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(3);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(4);
+            
+            String count_rows = String.valueOf(t_data_pencarian_skripsi.getRowCount());
+            lbl_jumdata.setText("Jumlah Data : " + count_rows);
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Pencarian_Skripsi.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void GetData_View(){
+        int row = t_data_pencarian_skripsi.getSelectedRow();
+        String row_id = (t_data_pencarian_skripsi.getModel().getValueAt(row, 0).toString());
+        tf_id.setText(row_id);
+    }
+    
+    private void SearchData(String key){
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_skripsi.id, t_data_skripsi.judul, t_kategori_skripsi.kategori_studi, t_data_mahasiswa.nama, t_data_dosen.nama FROM t_data_skripsi INNER JOIN t_kategori_skripsi ON t_data_skripsi.id = t_kategori_skripsi.id INNER JOIN t_data_mahasiswa ON t_data_skripsi.id = t_data_mahasiswa.id INNER JOIN t_data_dosen ON t_data_skripsi.id = t_data_dosen.id WHERE t_data_skripsi.id LIKE '%"+key+"%' OR t_data_skripsi.judul LIKE '%"+key+"%' OR t_kategori_skripsi.kategori_studi LIKE '%"+key+"%' OR t_data_mahasiswa.nama LIKE '%"+key+"%' OR t_data_dosen.nama LIKE '%"+key+"%'");
+            t_data_pencarian_skripsi.setModel(DbUtils.resultSetToTableModel(sql));
+            t_data_pencarian_skripsi.getColumnModel().getColumn(0);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(1);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(2);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(3);
+            t_data_pencarian_skripsi.getColumnModel().getColumn(4);
+            
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Pencarian_Skripsi.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -213,22 +274,22 @@ public class Pencarian_Skripsi extends javax.swing.JFrame {
 
     private void btn_refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_refreshActionPerformed
         // TODO add your handling code here:
-    
+        GetData();
     }//GEN-LAST:event_btn_refreshActionPerformed
 
     private void t_data_pencarian_skripsiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_pencarian_skripsiMouseClicked
         // TODO add your handling code here:
-        
+        GetData_View();
     }//GEN-LAST:event_t_data_pencarian_skripsiMouseClicked
 
     private void t_data_pencarian_skripsiMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_pencarian_skripsiMouseReleased
         // TODO add your handling code here:
-       
+        GetData_View();
     }//GEN-LAST:event_t_data_pencarian_skripsiMouseReleased
 
     private void t_data_pencarian_skripsiKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_t_data_pencarian_skripsiKeyReleased
         // TODO add your handling code here:
-      
+        GetData_View();
     }//GEN-LAST:event_t_data_pencarian_skripsiKeyReleased
 
     private void tf_idActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf_idActionPerformed
@@ -237,12 +298,18 @@ public class Pencarian_Skripsi extends javax.swing.JFrame {
 
     private void btn_clearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_clearActionPerformed
         // TODO add your handling code here:
-       
+        TxtClear();
     }//GEN-LAST:event_btn_clearActionPerformed
 
     private void tf_cariKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_cariKeyReleased
         // TODO add your handling code here:
-        
+        String key = tf_cari.getText();  
+
+        if(key != ""){
+            SearchData(key);
+        }else{
+            GetData();
+        }
     }//GEN-LAST:event_tf_cariKeyReleased
 
     /**
