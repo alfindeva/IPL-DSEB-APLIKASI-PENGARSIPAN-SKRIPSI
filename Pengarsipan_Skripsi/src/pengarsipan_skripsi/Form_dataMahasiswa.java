@@ -6,9 +6,16 @@
 package pengarsipan_skripsi;
 
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import net.proteanit.sql.DbUtils;
 
 /*
  *
@@ -26,7 +33,12 @@ public class Form_dataMahasiswa extends javax.swing.JFrame {
     public Form_dataMahasiswa() {
         initComponents();
         initUI();
-      
+        GetData();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        lbl_validasiNIM.setVisible(false);
+        lbl_validasiNama.setVisible(false);
+        lbl_validasiEmail.setVisible(false);
     }
     
     private void initUI(){
@@ -37,6 +49,51 @@ public class Form_dataMahasiswa extends javax.swing.JFrame {
         int dx = centerPoint.x - windowSize.width / 2;
         int dy = centerPoint.y - windowSize.height / 2;    
         setLocation(dx, dy);   
+    }
+    
+    private void TxtClear(){
+        tf_id.setText("");
+        tf_nim.setText("");
+        tf_nama.setText("");
+        cb_jurusan.setSelectedIndex(0);
+        cb_angkatan.setSelectedIndex(0);
+        tf_email.setText("");
+        tf_id.setVisible(false);
+    }
+    
+    private void GetData(){
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_mahasiswa.id, t_data_mahasiswa.nim, t_data_mahasiswa.nama, t_data_mahasiswa.jurusan, t_data_mahasiswa.angkatan, t_data_mahasiswa.email FROM t_data_mahasiswa");
+            t_data_mahasiswa.setModel(DbUtils.resultSetToTableModel(sql));
+            t_data_mahasiswa.getColumnModel().getColumn(0);
+            t_data_mahasiswa.getColumnModel().getColumn(1);
+            t_data_mahasiswa.getColumnModel().getColumn(2);
+            t_data_mahasiswa.getColumnModel().getColumn(3);
+            t_data_mahasiswa.getColumnModel().getColumn(4);
+            t_data_mahasiswa.getColumnModel().getColumn(5);
+
+            String count_rows = String.valueOf(t_data_mahasiswa.getRowCount());
+            lbl_jumdata.setText("Jumlah Data : " + count_rows);
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+     private void BtnEnabled(boolean x){
+        btn_edit.setEnabled(x);
+        btn_hapus.setEnabled(x);
+    }
+     
+    private void GetData_View(){
+        int row = t_data_mahasiswa.getSelectedRow();
+        String row_id = (t_data_mahasiswa.getModel().getValueAt(row, 0).toString());
+        tf_id.setText(row_id);
+        BtnEnabled(true);
     }
     
     /**
@@ -399,32 +456,145 @@ public class Form_dataMahasiswa extends javax.swing.JFrame {
 
     private void btn_batalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_batalActionPerformed
         // TODO add your handling code here:
-        
+        btn_tambah.doClick();
     }//GEN-LAST:event_btn_batalActionPerformed
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
         // TODO add your handling code here:
-       
+       String row_id = tf_id.getText();
+        String row_nim = tf_nim.getText();
+        String row_nama = tf_nama.getText();
+        String row_jurusan = (String) cb_jurusan.getSelectedItem();
+        String row_angkatan = (String) cb_angkatan.getSelectedItem();
+        String row_email = tf_email.getText();
+        int c_kode = 0;
+
+        if(!"".equals(row_nim) && !"".equals(row_nama) && !"".equals(row_jurusan) && !"".equals(row_angkatan) && !"".equals(row_email)){
+            try {
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT COUNT(t_data_mahasiswa.id) as count FROM t_data_mahasiswa WHERE t_data_mahasiswa.nim='"+row_nim+"'");
+                sql.next();
+                c_kode = sql.getInt("count");
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            if("".equals(row_id)){
+                if(c_kode == 0)
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("INSERT INTO t_data_mahasiswa(nim, nama, jurusan, angkatan, email) VALUES ('" + row_nim + "', '" + row_nama + "' , '" + row_jurusan + "', '" + row_angkatan+ "', '" + row_email+ "')");
+                        JOptionPane.showMessageDialog(null, "Berhasil menyimpan data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "NIM sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }else{
+                if(c_kode == 0 || row_nim.equals(row_nim))
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("UPDATE t_data_mahasiswa SET nim='" + row_nim + "',nama='" + row_nama + "' ,jurusan='" + row_jurusan + "',angkatan='" + row_angkatan + "',email='" + row_email + "' WHERE id = '" + row_id + "'");
+                        JOptionPane.showMessageDialog(null, "Berhasil mengubah data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "NIM sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat inputan yang kosong.");
+        }
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
         // TODO add your handling code here:
-        
+        lbl_tambahdata.setForeground(Color.black);
+        lbl_tambahdata.setText("Tambah Data");
+        t_data_mahasiswa.clearSelection();
+        TxtClear();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        tf_nim.requestFocus();
     }//GEN-LAST:event_btn_tambahActionPerformed
 
     private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
         // TODO add your handling code here
-        
+        String row_id = tf_id.getText();
+        if(!"0".equals(row_id)){
+            try {
+                btn_simpan.setText("SIMPAN");
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_mahasiswa.id, t_data_mahasiswa.nim, t_data_mahasiswa.nama, t_data_mahasiswa.jurusan, t_data_mahasiswa.angkatan, t_data_mahasiswa.email FROM t_data_mahasiswa WHERE t_data_mahasiswa.id='"+row_id+"'");
+                if(sql.next()){
+                    String kode = sql.getString("nim");
+                    lbl_tambahdata.setText("Edit Data | " + kode);
+                    tf_id.setText(sql.getString("id"));
+                    tf_nim.setText(kode);
+                    tf_nama.setText(sql.getString("nama"));
+                    cb_jurusan.setSelectedItem(sql.getString("jurusan"));
+                    cb_angkatan.setSelectedItem(sql.getString("angkatan"));
+                    tf_email.setText(sql.getString("email"));
+                    tf_nim.requestFocus();
+                }
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat kesalahan id null!");
+        }
     }//GEN-LAST:event_btn_editActionPerformed
 
     private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
         // TODO add your handling code here:
-       
+       int ok = JOptionPane.showConfirmDialog(null, "Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.OK_CANCEL_OPTION);
+        if(ok==0) {
+            try {
+                String row_id = tf_id.getText();
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                stm.executeUpdate("DELETE FROM t_data_mahasiswa WHERE id = '" + row_id + "'");
+                JOptionPane.showMessageDialog(null, "Berhasil menghapus data.");
+                btn_tambah.doClick();
+                konek.closekoneksi();
+                GetData();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_btn_hapusActionPerformed
 
     private void btn_refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_refreshActionPerformed
         // TODO add your handling code here:
-        
+        GetData();
     }//GEN-LAST:event_btn_refreshActionPerformed
 
     private void tf_idActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf_idActionPerformed
@@ -433,17 +603,17 @@ public class Form_dataMahasiswa extends javax.swing.JFrame {
 
     private void t_data_mahasiswaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_mahasiswaMouseClicked
         // TODO add your handling code here:
-        
+        GetData_View();
     }//GEN-LAST:event_t_data_mahasiswaMouseClicked
 
     private void t_data_mahasiswaMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_mahasiswaMouseReleased
         // TODO add your handling code here:
-        
+        GetData_View();
     }//GEN-LAST:event_t_data_mahasiswaMouseReleased
 
     private void t_data_mahasiswaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_t_data_mahasiswaKeyReleased
         // TODO add your handling code here:
-        
+        GetData_View();
     }//GEN-LAST:event_t_data_mahasiswaKeyReleased
 
     private void tf_nimKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_nimKeyTyped
@@ -458,17 +628,32 @@ public class Form_dataMahasiswa extends javax.swing.JFrame {
 
     private void btn_validasiNIMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiNIMActionPerformed
         // TODO add your handling code here:
-        
+        if(!tf_nim.getText().matches("[0-9]*")){
+            lbl_validasiNIM.setText("Masukkan harus berupa angka!");
+            lbl_validasiNIM.setVisible(true);
+        } else {
+            lbl_validasiNIM.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiNIMActionPerformed
 
     private void btn_validasiNamaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiNamaActionPerformed
         // TODO add your handling code here:
-     
+        if(!tf_nama.getText().matches("[a-zA-z]*")){
+            lbl_validasiNama.setText("Masukkan harus berupa huruf!");
+            lbl_validasiNama.setVisible(true);
+        } else {
+            lbl_validasiNama.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiNamaActionPerformed
 
     private void btn_validasiEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiEmailActionPerformed
         // TODO add your handling code here:
-       
+        if(!tf_email.getText().matches("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")){
+             lbl_validasiEmail.setText("Masukkan harus format Email!");
+             lbl_validasiEmail.setVisible(true);
+         } else {
+             lbl_validasiEmail.setVisible(false);
+         }
     }//GEN-LAST:event_btn_validasiEmailActionPerformed
 
     /**
