@@ -5,10 +5,16 @@
  */
 package pengarsipan_skripsi;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
-
+import javax.swing.JOptionPane;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.proteanit.sql.DbUtils;
         
 /*
  *
@@ -26,7 +32,12 @@ public class Form_dataDosen extends javax.swing.JFrame {
     public Form_dataDosen() {
         initComponents();
         initUI();
-        
+        GetData();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        lbl_validasiNID.setVisible(false);
+        lbl_validasiNama.setVisible(false);
+        lbl_validasiEmail.setVisible(false);
     }
 
     private void initUI(){
@@ -39,6 +50,46 @@ public class Form_dataDosen extends javax.swing.JFrame {
         setLocation(dx, dy);   
     }
     
+    private void TxtClear(){
+        tf_id.setText("");
+        tf_nid.setText("");
+        tf_nama.setText("");
+        tf_email.setText("");
+        tf_id.setVisible(false);
+    }
+
+    private void GetData(){
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_dosen.id, t_data_dosen.nid, t_data_dosen.nama, t_data_dosen.email FROM t_data_dosen");
+            t_data_dosen.setModel(DbUtils.resultSetToTableModel(sql));
+            t_data_dosen.getColumnModel().getColumn(0);
+            t_data_dosen.getColumnModel().getColumn(1);
+            t_data_dosen.getColumnModel().getColumn(2);
+            t_data_dosen.getColumnModel().getColumn(3);
+
+            String count_rows = String.valueOf(t_data_dosen.getRowCount());
+            lbl_jumdata.setText("Jumlah Data : " + count_rows);
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void BtnEnabled(boolean x){
+        btn_edit.setEnabled(x);
+        btn_hapus.setEnabled(x);
+    }
+    
+    private void GetData_View(){
+        int row = t_data_dosen.getSelectedRow();
+        String row_id = (t_data_dosen.getModel().getValueAt(row, 0).toString());
+        tf_id.setText(row_id);
+        BtnEnabled(true);
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -340,47 +391,156 @@ public class Form_dataDosen extends javax.swing.JFrame {
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
         // TODO add your handling code here:
-       
+        String row_id = tf_id.getText();
+        String row_nid = tf_nid.getText();
+        String row_nama = tf_nama.getText();
+        String row_email = tf_email.getText();
+        int c_kode = 0;
+
+        if(!"".equals(row_nid) && !"".equals(row_nama) && !"".equals(row_email)){
+            try {
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT COUNT(t_data_dosen.id) as count FROM t_data_dosen WHERE t_data_dosen.nid='"+row_nid+"'");
+                sql.next();
+                c_kode = sql.getInt("count");
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            if("".equals(row_id)){
+                if(c_kode == 0)
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("INSERT INTO t_data_dosen(nid, nama, email) VALUES ('" + row_nid + "', '" + row_nama + "' , '" + row_email+ "')");
+                        JOptionPane.showMessageDialog(null, "Berhasil menyimpan data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "NID sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }else{
+                if(c_kode == 0 || row_nid.equals(row_nid))
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("UPDATE t_data_dosen SET nid='" + row_nid + "', nama='" + row_nama + "' , email='" + row_email + "' WHERE id = '" + row_id + "'");
+                        JOptionPane.showMessageDialog(null, "Berhasil mengubah data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "NID sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat inputan yang kosong.");
+        }
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void btn_batalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_batalActionPerformed
         // TODO add your handling code here:
-        
+        btn_tambah.doClick();
     }//GEN-LAST:event_btn_batalActionPerformed
 
     private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
         // TODO add your handling code here:
-       
+        lbl_tambahdata.setForeground(Color.black);
+        lbl_tambahdata.setText("Tambah Data");
+        t_data_dosen.clearSelection();
+        TxtClear();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        tf_nid.requestFocus();
     }//GEN-LAST:event_btn_tambahActionPerformed
 
     private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
         // TODO add your handling code here:
-       
+        String row_id = tf_id.getText();
+        if(!"0".equals(row_id)){
+            try {
+                btn_simpan.setText("SIMPAN");
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT t_data_dosen.id, t_data_dosen.nid, t_data_dosen.nama, t_data_dosen.email FROM t_data_dosen WHERE t_data_dosen.id='"+row_id+"'");
+                if(sql.next()){
+                    String kode = sql.getString("nid");
+                    lbl_tambahdata.setText("Edit Data | " + kode);
+                    tf_id.setText(sql.getString("id"));
+                    tf_nid.setText(kode);
+                    tf_nama.setText(sql.getString("nama"));
+                    tf_email.setText(sql.getString("email"));
+                    tf_nid.requestFocus();
+                }
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat kesalahan id null!");
+        }
     }//GEN-LAST:event_btn_editActionPerformed
 
     private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
         // TODO add your handling code here:
-       
+        int ok = JOptionPane.showConfirmDialog(null, "Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.OK_CANCEL_OPTION);
+        if(ok==0) {
+            try {
+                String row_id = tf_id.getText();
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                stm.executeUpdate("DELETE FROM t_data_dosen WHERE id = '" + row_id + "'");
+                JOptionPane.showMessageDialog(null, "Berhasil menghapus data.");
+                btn_tambah.doClick();
+                konek.closekoneksi();
+                GetData();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_btn_hapusActionPerformed
 
     private void btn_refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_refreshActionPerformed
         // TODO add your handling code here:
-       
+        GetData();
     }//GEN-LAST:event_btn_refreshActionPerformed
 
     private void t_data_dosenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_dosenMouseClicked
         // TODO add your handling code here:
-       
+        GetData_View();
     }//GEN-LAST:event_t_data_dosenMouseClicked
 
     private void t_data_dosenMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_dosenMouseReleased
         // TODO add your handling code here:
-       
+        GetData_View();
     }//GEN-LAST:event_t_data_dosenMouseReleased
 
     private void t_data_dosenKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_t_data_dosenKeyReleased
         // TODO add your handling code here:
-       
+        GetData_View();
     }//GEN-LAST:event_t_data_dosenKeyReleased
 
     private void tf_idActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf_idActionPerformed
@@ -389,17 +549,32 @@ public class Form_dataDosen extends javax.swing.JFrame {
 
     private void btn_validasiNIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiNIDActionPerformed
         // TODO add your handling code here:
-        
+        if(!tf_nid.getText().matches("[0-9]*")){
+            lbl_validasiNID.setText("Masukkan harus berupa angka!");
+            lbl_validasiNID.setVisible(true);
+        } else {
+            lbl_validasiNID.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiNIDActionPerformed
 
     private void btn_validasiNamaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiNamaActionPerformed
         // TODO add your handling code here:
-        
+        if(!tf_nama.getText().matches("[a-z][a-zA-z]*")){
+            lbl_validasiNama.setText("Masukkan harus berupa huruf!");
+            lbl_validasiNama.setVisible(true);
+        } else {
+            lbl_validasiNama.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiNamaActionPerformed
 
     private void btn_validasiEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiEmailActionPerformed
         // TODO add your handling code here:
-       
+        if(!tf_email.getText().matches("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")){
+            lbl_validasiEmail.setText("Masukkan harus format Email!");
+            lbl_validasiEmail.setVisible(true);
+        } else {
+            lbl_validasiEmail.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiEmailActionPerformed
 
     /**
