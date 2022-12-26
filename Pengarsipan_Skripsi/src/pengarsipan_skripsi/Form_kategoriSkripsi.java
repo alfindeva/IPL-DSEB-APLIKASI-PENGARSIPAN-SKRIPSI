@@ -5,9 +5,16 @@
  */
 package pengarsipan_skripsi;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import net.proteanit.sql.DbUtils;
 
 /*
  *
@@ -25,6 +32,11 @@ public class Form_kategoriSkripsi extends javax.swing.JFrame {
     public Form_kategoriSkripsi() {
         initComponents();
         initUI();
+        GetData();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        lbl_validasiK_Skripsi.setVisible(false);
+        lbl_validasiKA_Skripsi.setVisible(false);
     }
     
     private void initUI(){
@@ -35,7 +47,48 @@ public class Form_kategoriSkripsi extends javax.swing.JFrame {
         int dx = centerPoint.x - windowSize.width / 2;
         int dy = centerPoint.y - windowSize.height / 2;    
         setLocation(dx, dy);   
-    } 
+    }
+    
+    private void TxtClear(){
+        tf_id.setText("");
+        tf_kode_skripsi.setText("");
+        tf_kategori_skripsi.setText("");
+        cb_kategori_studi.setSelectedIndex(0);
+        tf_id.setVisible(false);
+    }
+    
+    private void GetData(){
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet sql = stm.executeQuery("SELECT t_kategori_skripsi.id, t_kategori_skripsi.kode_skripsi, t_kategori_skripsi.kategori_skripsi, t_kategori_skripsi.kategori_studi FROM t_kategori_skripsi");
+            t_data_kategori_skripsi.setModel(DbUtils.resultSetToTableModel(sql));
+            t_data_kategori_skripsi.getColumnModel().getColumn(0);
+            t_data_kategori_skripsi.getColumnModel().getColumn(1);
+            t_data_kategori_skripsi.getColumnModel().getColumn(2);
+            t_data_kategori_skripsi.getColumnModel().getColumn(3);
+
+            String count_rows = String.valueOf(t_data_kategori_skripsi.getRowCount());
+            lbl_jumdata.setText("Jumlah Data : " + count_rows);
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Form_dataDosen.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void BtnEnabled(boolean x){
+        btn_edit.setEnabled(x);
+        btn_hapus.setEnabled(x);
+    }
+    
+    private void GetData_View(){
+        int row = t_data_kategori_skripsi.getSelectedRow();
+        String row_id = (t_data_kategori_skripsi.getModel().getValueAt(row, 0).toString());
+        tf_id.setText(row_id);
+        BtnEnabled(true);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -341,47 +394,156 @@ public class Form_kategoriSkripsi extends javax.swing.JFrame {
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
         // TODO add your handling code here:
-        
+        String row_id = tf_id.getText();
+        String row_kode_skripsi = tf_kode_skripsi.getText();
+        String row_kategori_skripsi = tf_kategori_skripsi.getText();
+        String row_kategori_studi = (String) cb_kategori_studi.getSelectedItem();
+        int c_kode = 0;
+
+        if(!"".equals(row_kode_skripsi) && !"".equals(row_kategori_skripsi) && !"".equals(row_kategori_studi)){
+            try {
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT COUNT(t_kategori_skripsi.id) as count FROM t_kategori_skripsi WHERE t_kategori_skripsi.kode_skripsi='"+row_kode_skripsi+"'");
+                sql.next();
+                c_kode = sql.getInt("count");
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_kategoriSkripsi.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            if("".equals(row_id)){
+                if(c_kode == 0)
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("INSERT INTO t_kategori_skripsi(kode_skripsi, kategori_skripsi, kategori_studi) VALUES ('" + row_kode_skripsi + "', '" + row_kategori_skripsi + "' , '" + row_kategori_studi+ "')");
+                        JOptionPane.showMessageDialog(null, "Berhasil menyimpan data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_kategoriSkripsi.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "Kode Skripsi sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }else{
+                if(c_kode == 0 || row_kode_skripsi.equals(row_kode_skripsi))
+                {
+                    try {
+                        Connection conn = konek.openkoneksi();
+                        java.sql.Statement stm = conn.createStatement();
+                        stm.executeUpdate("UPDATE t_kategori_skripsi SET kode_skripsi='" + row_kode_skripsi + "', kategori_skripsi='" + row_kategori_skripsi + "' , kategori_studi='" + row_kategori_studi + "' WHERE id = '" + row_id + "'");
+                        JOptionPane.showMessageDialog(null, "Berhasil mengubah data.");
+                        btn_tambah.doClick();
+                        konek.closekoneksi();
+                        GetData();
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error " + e);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Form_kategoriSkripsi.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "Kode Skripsi sudah pernah disimpan.", "Gagal Disimpan", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat inputan yang kosong.");
+        }
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void btn_batalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_batalActionPerformed
         // TODO add your handling code here:
-      
+        btn_tambah.doClick();
     }//GEN-LAST:event_btn_batalActionPerformed
 
     private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
         // TODO add your handling code here:
-        
+        lbl_tambahdata.setForeground(Color.black);
+        lbl_tambahdata.setText("Tambah Data");
+        t_data_kategori_skripsi.clearSelection();
+        TxtClear();
+        BtnEnabled(false);
+        btn_simpan.setText("SIMPAN");
+        tf_kode_skripsi.requestFocus();
     }//GEN-LAST:event_btn_tambahActionPerformed
 
     private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
         // TODO add your handling code here:
-        
+        String row_id = tf_id.getText();
+        if(!"0".equals(row_id)){
+            try {
+                btn_simpan.setText("SIMPAN");
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                java.sql.ResultSet sql = stm.executeQuery("SELECT t_kategori_skripsi.id, t_kategori_skripsi.kode_skripsi, t_kategori_skripsi.kategori_skripsi, t_kategori_skripsi.kategori_studi FROM t_kategori_skripsi WHERE t_kategori_skripsi.id='"+row_id+"'");
+                if(sql.next()){
+                    String kode = sql.getString("kode_skripsi");
+                    lbl_tambahdata.setText("Edit Data | " + kode);
+                    tf_id.setText(sql.getString("id"));
+                    tf_kode_skripsi.setText(kode);
+                    tf_kategori_skripsi.setText(sql.getString("kategori_skripsi"));
+                    cb_kategori_studi.setSelectedItem(sql.getString("kategori_studi"));
+                    tf_kode_skripsi.requestFocus();
+                }
+                konek.closekoneksi();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_kategoriSkripsi.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Terdapat kesalahan id null!");
+        }
     }//GEN-LAST:event_btn_editActionPerformed
 
     private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
         // TODO add your handling code here:
-        
+        int ok = JOptionPane.showConfirmDialog(null, "Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.OK_CANCEL_OPTION);
+        if(ok==0) {
+            try {
+                String row_id = tf_id.getText();
+                Connection conn = konek.openkoneksi();
+                java.sql.Statement stm = conn.createStatement();
+                stm.executeUpdate("DELETE FROM t_kategori_skripsi WHERE id = '" + row_id + "'");
+                JOptionPane.showMessageDialog(null, "Berhasil menghapus data.");
+                btn_tambah.doClick();
+                konek.closekoneksi();
+                GetData();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error " + e);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Form_kategoriSkripsi.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_btn_hapusActionPerformed
 
     private void btn_refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_refreshActionPerformed
         // TODO add your handling code here:
-      
+        GetData();
     }//GEN-LAST:event_btn_refreshActionPerformed
 
     private void t_data_kategori_skripsiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_kategori_skripsiMouseClicked
         // TODO add your handling code here:
-       
+        GetData_View();
     }//GEN-LAST:event_t_data_kategori_skripsiMouseClicked
 
     private void t_data_kategori_skripsiMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_data_kategori_skripsiMouseReleased
         // TODO add your handling code here:
-        
+        GetData_View();
     }//GEN-LAST:event_t_data_kategori_skripsiMouseReleased
 
     private void t_data_kategori_skripsiKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_t_data_kategori_skripsiKeyReleased
         // TODO add your handling code here:
-      
+        GetData_View();
     }//GEN-LAST:event_t_data_kategori_skripsiKeyReleased
 
     private void tf_idActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf_idActionPerformed
@@ -394,12 +556,22 @@ public class Form_kategoriSkripsi extends javax.swing.JFrame {
 
     private void btn_validasiK_SkripsiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiK_SkripsiActionPerformed
         // TODO add your handling code here:
-       
+        if(!tf_kode_skripsi.getText().matches("[A-Z0-9]*")){
+            lbl_validasiK_Skripsi.setText("Masukkan harus berupa huruf kapital!");
+            lbl_validasiK_Skripsi.setVisible(true);
+        } else {
+            lbl_validasiK_Skripsi.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiK_SkripsiActionPerformed
 
     private void btn_validasiKA_SkripsiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_validasiKA_SkripsiActionPerformed
         // TODO add your handling code here:
-        
+        if(!tf_kategori_skripsi.getText().matches("[A-Z]*")){
+            lbl_validasiKA_Skripsi.setText("Masukkan harus berupa huruf kapital!");
+            lbl_validasiKA_Skripsi.setVisible(true);
+        } else {
+            lbl_validasiKA_Skripsi.setVisible(false);
+        }
     }//GEN-LAST:event_btn_validasiKA_SkripsiActionPerformed
 
     /**
