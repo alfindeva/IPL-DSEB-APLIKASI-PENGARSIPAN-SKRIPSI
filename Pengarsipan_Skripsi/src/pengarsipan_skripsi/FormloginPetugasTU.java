@@ -8,6 +8,15 @@ package pengarsipan_skripsi;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.swing.JOptionPane;
 
 
 /*
@@ -39,6 +48,18 @@ public class FormloginPetugasTU extends javax.swing.JFrame {
         setLocation(dx, dy);
     }
     
+    public boolean isValidUsername(String tf_username) {
+		
+	Pattern PUsername = Pattern.compile("[a-z][0-9]*");
+	Matcher MUsername = PUsername.matcher(tf_username);
+            return MUsername.matches();
+    }
+    
+    public boolean isValidPassword (String password) {
+	Pattern PPassword = Pattern.compile("[a-z][0-9]*");
+	Matcher MPassword = PPassword .matcher(password);
+            return MPassword.matches();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -175,12 +196,47 @@ public class FormloginPetugasTU extends javax.swing.JFrame {
 
     private void btn_loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_loginActionPerformed
         // TODO add your handling code here:
-        
+        try {
+            Connection conn = konek.openkoneksi();
+            java.sql.Statement stm = conn.createStatement();
+            java.sql.ResultSet rsLogin = stm.executeQuery("SELECT * FROM t_petugas_tu WHERE nama_pengguna='"+tf_username.getText()+"' AND kata_sandi='"+tf_password.getText()+"'");    
+            if(rsLogin.next()){
+                if(tf_username.getText().equals(rsLogin.getString("nama_pengguna")) && tf_password.getText().equals(rsLogin.getString("kata_sandi"))){
+                    if (isValidUsername(tf_username.getText())) {
+			JOptionPane.showMessageDialog(null, "Invalid Username", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    } else if(isValidPassword(tf_password.getText())) {
+			JOptionPane.showMessageDialog(null, "Invalid Password", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Inputan Valid, Thank You", "Message",JOptionPane.INFORMATION_MESSAGE);
+                    
+                    PetugasTU.setU_id(rsLogin.getInt("id"));
+                    PetugasTU.setU_nama_pengguna(rsLogin.getString("nama_pengguna"));
+                    PetugasTU.setU_nama_petugas(rsLogin.getString("nama_petugas"));
+                    
+                    JOptionPane.showMessageDialog(null, "Berhasil Login");
+                    new Form_mainMenu().setVisible(true);
+                    this.dispose();
+                    }
+                }
+            }else{
+                    JOptionPane.showMessageDialog(null, "Username dan password yang Anda masukkan salah. \nSilahkan coba lagi.");
+                    tf_username.setText("");
+                    tf_password.setText("");
+                    tf_username.requestFocus();
+                }
+            konek.closekoneksi();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error " + e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(FormloginPetugasTU.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btn_loginActionPerformed
 
     private void tf_usernameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_usernameKeyPressed
         // TODO add your handling code here:
-       
+        if (evt.getKeyCode()==KeyEvent.VK_ENTER) {
+            btn_loginActionPerformed(new ActionEvent(evt.getSource(), evt.getID(), "Key Press login"));
+        }
     }//GEN-LAST:event_tf_usernameKeyPressed
 
     private void tf_passwordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf_passwordActionPerformed
@@ -188,7 +244,10 @@ public class FormloginPetugasTU extends javax.swing.JFrame {
     }//GEN-LAST:event_tf_passwordActionPerformed
 
     private void tf_passwordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_passwordKeyPressed
-     
+        // TODO add your handling code here:
+        if (evt.getKeyCode()==KeyEvent.VK_ENTER) {
+            btn_loginActionPerformed(new ActionEvent(evt.getSource(), evt.getID(), "Key Press login"));
+        }
     }//GEN-LAST:event_tf_passwordKeyPressed
 
     /**
